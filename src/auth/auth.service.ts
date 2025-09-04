@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { newUserHtml } from 'src/email/utils/email-template';
-import { Subject } from 'rxjs';
+import { NotificationGateway } from 'src/gateway/notification-gateway';
 @Injectable()
 export class AuthService {
   constructor(
@@ -19,6 +19,7 @@ export class AuthService {
     private config: ConfigService,
     private jwt: JwtService,
     @InjectQueue('email') private readonly emailQueue: Queue,
+    private notiService: NotificationGateway,
   ) {}
 
   async localSignup(createUserDto: CreateUserDto) {
@@ -41,6 +42,7 @@ export class AuthService {
       html: newUserHtml(name, user.email),
     });
     console.log('Signup email job added to the queue');
+    this.notiService.sendUserSignupNotification(name, user.email);
     return { user: safeUser };
   }
   async localLogin(loginDto: LoginDto) {
