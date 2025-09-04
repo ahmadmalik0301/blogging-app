@@ -8,12 +8,17 @@ import { CreateUserDto, LoginDto, RefreshDto } from './dto/local-strategy.dto';
 import * as argon from 'argon2';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { newUserHtml } from 'src/email/utils/email-template';
+import { Subject } from 'rxjs';
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
     private jwt: JwtService,
+    @InjectQueue('email') private readonly emailQueue: Queue,
   ) {}
 
   async localSignup(createUserDto: CreateUserDto) {
@@ -29,6 +34,13 @@ export class AuthService {
       },
     });
     const { password, ...safeUser } = user;
+    const name = user.firstName + ' ' + user.lastName;
+    await this.emailQueue.add('sendEmail', {
+      to: this.config.get<string>('ADMIN_EMAIL'),
+      subject: 'New User joined!',
+      html: newUserHtml(name, user.email),
+    });
+    console.log('Signup email job added to the queue');
     return { user: safeUser };
   }
   async localLogin(loginDto: LoginDto) {
