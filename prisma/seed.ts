@@ -27,6 +27,20 @@ async function main() {
   });
 
   console.log('Admin user ready:', admin.email);
+
+  const postsData = Array.from({ length: 10 }).map((_, i) => ({
+    title: `Sample Post ${i + 1}`,
+    tagLine: `This is tagline for post ${i + 1}`,
+    body: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Post number ${
+      i + 1
+    } was generated as seed data for testing.`,
+  }));
+
+  await prisma.post.createMany({
+    data: postsData,
+  });
+
+  console.log('10 random posts created ');
 }
 
 main()

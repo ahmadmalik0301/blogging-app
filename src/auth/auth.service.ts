@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   HttpException,
   Injectable,
   UnauthorizedException,
@@ -166,5 +167,50 @@ export class AuthService {
     } catch (err) {
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+  async googleLogin(user: any) {
+    if (!user) {
+      throw new UnauthorizedException('Google authentication failed');
+    }
+
+    let existingUser = await this.prisma.user.findUnique({
+      where: { email: user.email },
+    });
+
+    if (!existingUser) {
+      existingUser = await this.prisma.user.create({
+        data: {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          provider: 'GOOGLE',
+          googleID: user.googleID,
+        },
+      });
+    } else {
+      if (existingUser.provider === 'LOCAL') {
+        throw new ConflictException(
+          'A user with this email already exist. kindly use Email and password method',
+        );
+      }
+    }
+    const accessToken = await this.signAccessToken(
+      existingUser.id,
+      existingUser.email,
+      existingUser.role,
+      existingUser.provider,
+    );
+    const refreshToken = await this.signRefreshToken(
+      existingUser.id,
+      existingUser.email,
+      existingUser.role,
+      existingUser.provider,
+    );
+    await this.prisma.user.update({
+      where: { id: existingUser.id },
+      data: { refreshToken },
+    });
+
+    return { user: existingUser, accessToken, refreshToken };
   }
 }

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -29,6 +30,7 @@ export class PostController {
 
   @Get()
   findAll() {
+    console.log('getting data from db');
     return this.postService.findAll();
   }
 

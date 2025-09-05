@@ -6,15 +6,16 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt-strategy';
 import { BullModule } from '@nestjs/bullmq';
 import { GatewayModule } from 'src/gateway/gateway.module';
+import { GoogleStrategy } from './strategies/google-strategy';
 
 @Module({
   imports: [
     JwtModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     BullModule.registerQueue({ name: 'email' }),
     GatewayModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy],
 })
 export class AuthModule {}

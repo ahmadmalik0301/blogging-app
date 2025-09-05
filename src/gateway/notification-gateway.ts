@@ -69,25 +69,3 @@ export class NotificationGateway
     });
   }
 }
-
-// try {
-//   const token = client.handshake.auth?.token;
-//   if (!token) throw new Error('No token provided');
-
-//   const secret: string = this.config.get<string>('JWT_SECRET')!;
-//   const payload: any = await this.jwt.verifyAsync(token, { secret });
-
-//   const user = await this.prisma.user.findUnique({
-//     where: { id: payload.sub },
-//   });
-//   if (!user || user.role !== 'ADMIN') {
-//     client.disconnect(true);
-//     return;
-//   }
-
-//   console.log(`Admin connected: ${user.email}`);
-//   client.data.user = user;
-// } catch (err) {
-//   console.log('Socket auth failed:', err.message);
-//   client.disconnect(true);
-// }
