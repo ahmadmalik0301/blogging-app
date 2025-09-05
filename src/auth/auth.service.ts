@@ -36,11 +36,11 @@ export class AuthService {
     });
     const { password, ...safeUser } = user;
     const name = user.firstName + ' ' + user.lastName;
-    await this.emailQueue.add('sendEmail', {
-      to: this.config.get<string>('ADMIN_EMAIL'),
-      subject: 'New User joined!',
-      html: newUserHtml(name, user.email),
-    });
+    // await this.emailQueue.add('sendEmail', {
+    //   to: this.config.get<string>('ADMIN_EMAIL'),
+    //   subject: 'New User joined!',
+    //   html: newUserHtml(name, user.email),
+    // });
     console.log('Signup email job added to the queue');
     this.notiService.sendUserSignupNotification(name, user.email);
     return { user: safeUser };
