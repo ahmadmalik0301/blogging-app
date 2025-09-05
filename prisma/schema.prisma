@@ -7,6 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Provider {
+  LOCAL
+  GOOGLE
+}
+
 model User {
   id           String    @id @default(uuid())
   email        String    @unique
@@ -15,11 +25,11 @@ model User {
   dateOfBirth  DateTime?
   password     String?
   googleID     String?   @unique
-  role         String    @default("USER")
+  role         Role      @default(USER)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   refreshToken String?
-  provider     String
+  provider     Provider
 }
 
 model Post {

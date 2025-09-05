@@ -13,6 +13,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { newUserHtml } from 'src/email/utils/email-template';
 import { NotificationGateway } from 'src/gateway/notification-gateway';
+import { Provider } from './enums/provider.enum';
 @Injectable()
 export class AuthService {
   constructor(
@@ -50,7 +51,7 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: {
         email: loginDto.email,
-        provider: 'LOCAL',
+        provider: Provider.LOCAL,
       },
     });
     if (!user) {
@@ -72,7 +73,6 @@ export class AuthService {
       user.role,
       user.provider,
     );
-    const hashrefreshToken = await argon.hash(refreshToken);
     await this.prisma.user.update({
       where: { id: user.id },
       data: { refreshToken },
@@ -183,7 +183,7 @@ export class AuthService {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          provider: 'GOOGLE',
+          provider: Provider.GOOGLE,
           googleID: user.googleID,
         },
       });
