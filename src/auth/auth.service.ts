@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUserDto, LoginDto, RefreshDto } from './dto/local-strategy.dto';
+import { CreateUserDto, LoginDto } from './dto/local-strategy.dto';
 import * as argon from 'argon2';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -38,11 +38,11 @@ export class AuthService {
     });
     const { password, ...safeUser } = user;
     const name = user.firstName + ' ' + user.lastName;
-    // await this.emailQueue.add('sendEmail', {
-    //   to: this.config.get<string>('ADMIN_EMAIL'),
-    //   subject: 'New User joined!',
-    //   html: newUserHtml(name, user.email),
-    // });
+    await this.emailQueue.add('sendEmail', {
+      to: this.config.get<string>('ADMIN_EMAIL'),
+      subject: 'New User joined!',
+      html: newUserHtml(name, user.email),
+    });
     console.log('Signup email job added to the queue');
     this.notiService.sendUserSignupNotification(name, user.email);
     return { user: safeUser };
@@ -106,8 +106,9 @@ export class AuthService {
       secret,
     });
   }
-  async refreshToken(refreshDto: RefreshDto) {
-    const { refreshToken } = refreshDto;
+  async refreshToken(refreshToken: string) {
+    if (!refreshToken)
+      throw new UnauthorizedException('No refresh token provided');
 
     try {
       const payload = await this.jwt.verifyAsync(refreshToken, {
@@ -117,11 +118,7 @@ export class AuthService {
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
       });
-      if (!user || !user.refreshToken) {
-        throw new UnauthorizedException('Invalid refresh request');
-      }
-      const isMatch = user.refreshToken === refreshToken;
-      if (!isMatch) {
+      if (!user || user.refreshToken !== refreshToken) {
         throw new UnauthorizedException('Refresh token mismatch');
       }
 
@@ -143,16 +140,15 @@ export class AuthService {
         data: { refreshToken: newRefreshToken },
       });
 
-      return {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      };
+      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     } catch (err) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
-  async logout(refreshDto: RefreshDto) {
-    const { refreshToken } = refreshDto;
+
+  async logout(refreshToken: string) {
+    if (!refreshToken)
+      throw new UnauthorizedException('No refresh token provided');
 
     try {
       const payload = await this.jwt.verifyAsync(refreshToken, {
@@ -163,7 +159,6 @@ export class AuthService {
         where: { id: payload.sub },
         data: { refreshToken: null },
       });
-      return { message: 'Logged out successfully' };
     } catch (err) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -176,16 +171,21 @@ export class AuthService {
     let existingUser = await this.prisma.user.findUnique({
       where: { email: user.email },
     });
-
+    const [firstName, lastName] = user.name.split(' ');
     if (!existingUser) {
       existingUser = await this.prisma.user.create({
         data: {
           email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          firstName,
+          lastName,
           provider: Provider.GOOGLE,
           googleID: user.googleID,
         },
+      });
+      await this.emailQueue.add('sendEmail', {
+        to: this.config.get<string>('ADMIN_EMAIL'),
+        subject: 'New User joined!',
+        html: newUserHtml(user.name, user.email),
       });
     } else {
       if (existingUser.provider === 'LOCAL') {

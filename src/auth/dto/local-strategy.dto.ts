@@ -48,10 +48,3 @@ export class LoginDto {
   @Transform(({ value }) => value?.trim())
   password: string;
 }
-
-export class RefreshDto {
-  @IsString()
-  @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
-  refreshToken: string;
-}
