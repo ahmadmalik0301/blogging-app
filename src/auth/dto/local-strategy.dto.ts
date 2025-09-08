@@ -7,6 +7,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 function formatName(value: string): string {
   if (!value) return value;
@@ -15,25 +16,30 @@ function formatName(value: string): string {
 }
 
 export class CreateUserDto {
+  @ApiProperty({ example: 'john.doe@example.com' })
   @IsEmail()
   @Transform(({ value }) => value?.trim().toLowerCase())
   email: string;
 
+  @ApiProperty({ example: 'John' })
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }) => formatName(value))
   firstName: string;
 
+  @ApiProperty({ example: 'Doe', required: false })
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }) => formatName(value))
-  lastName: string;
+  lastName?: string;
 
+  @ApiProperty({ example: '2000-05-20', required: false })
   @IsDateString()
   @Transform(({ value }) => value?.trim())
   @IsOptional()
-  dateOfBirth: string;
+  dateOfBirth?: string;
 
+  @ApiProperty({ example: 'StrongPass123!' })
   @IsString()
   @MinLength(6)
   @Transform(({ value }) => value?.trim())
@@ -41,10 +47,12 @@ export class CreateUserDto {
 }
 
 export class LoginDto {
+  @ApiProperty({ example: 'john.doe@example.com' })
   @IsEmail()
   @Transform(({ value }) => value?.trim().toLowerCase())
   email: string;
 
+  @ApiProperty({ example: 'StrongPass123!' })
   @IsString()
   @MinLength(6)
   @Transform(({ value }) => value?.trim())
