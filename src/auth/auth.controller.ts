@@ -7,6 +7,7 @@ import {
   Req,
   Res,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import express from 'express';
 import { CreateUserDto, LoginDto } from './dto/local-strategy.dto';
@@ -14,6 +15,8 @@ import { AuthService } from './auth.service';
 import { GetUser } from './decorators/get-user';
 import { GoogleGuard } from './Guards/google-guard';
 import { GetCookie } from './decorators/cookie-decorator';
+import { SetRefreshTokenInterceptor } from './interceptors/set-refresh-token.interceptor';
+import { ClearRefreshTokenInterceptor } from './interceptors/clear-refresh-token.interceptor';
 
 @Controller('auth')
 export class AuthController {
@@ -26,50 +29,22 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('/login')
-  async localLogin(
-    @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) res: express.Response,
-  ) {
-    const { accessToken, refreshToken } =
-      await this.authService.localLogin(loginDto);
-
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      signed: true,
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    return { accessToken };
+  @Post('/login')
+  @UseInterceptors(SetRefreshTokenInterceptor)
+  async localLogin(@Body() loginDto: LoginDto) {
+    return await this.authService.localLogin(loginDto);
   }
 
   @Post('/refresh')
-  async refreshToken(
-    @GetCookie('refresh_token') refreshToken: string,
-    @Res({ passthrough: true }) res: express.Response,
-  ) {
-    const { accessToken, refreshToken: newRefreshToken } =
-      await this.authService.refreshToken(refreshToken);
-
-    res.cookie('refresh_token', newRefreshToken, {
-      httpOnly: true,
-      signed: true,
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return { accessToken };
+  @UseInterceptors(SetRefreshTokenInterceptor)
+  async refreshToken(@GetCookie('refresh_token') refreshToken: string) {
+    return await this.authService.refreshToken(refreshToken);
   }
 
   @Post('/logout')
-  async logout(
-    @GetCookie('refresh_token') refreshToken: string,
-    @Res({ passthrough: true }) res: express.Response,
-  ) {
+  @UseInterceptors(ClearRefreshTokenInterceptor)
+  async logout(@GetCookie('refresh_token') refreshToken: string) {
     await this.authService.logout(refreshToken);
-
-    res.clearCookie('refresh_token');
-
     return { message: 'Logged out successfully' };
   }
 
@@ -79,23 +54,13 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(GoogleGuard)
-  async googleAuthRedirect(
-    @GetUser() user: any,
-    @Res({ passthrough: true }) res: express.Response,
-  ) {
+  @UseInterceptors(SetRefreshTokenInterceptor)
+  async googleAuthRedirect(@GetUser() user: any) {
     const {
       user: existingUser,
       accessToken,
       refreshToken,
     } = await this.authService.googleLogin(user);
-
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      signed: true,
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return { accessToken, user: existingUser };
+    return { accessToken, refreshToken, user: existingUser };
   }
 }
