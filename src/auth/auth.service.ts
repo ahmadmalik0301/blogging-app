@@ -40,9 +40,6 @@ export class AuthService {
 
     if (createUserDto.dateOfBirth) {
       const parsed = new Date(createUserDto.dateOfBirth);
-      if (isNaN(parsed.getTime())) {
-        throw new BadRequestException('Invalid date format for dateOfBirth');
-      }
       dob = parsed;
     }
 
@@ -80,18 +77,8 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException('Invalid Credential');
     }
-    const accessToken = await this.signAccessToken(
-      user.id,
-      user.email,
-      user.role,
-      user.provider,
-    );
-    const refreshToken = await this.signRefreshToken(
-      user.id,
-      user.email,
-      user.role,
-      user.provider,
-    );
+    const accessToken = await this.signAccessToken(user.id, user.email, user.role, user.provider);
+    const refreshToken = await this.signRefreshToken(user.id, user.email, user.role, user.provider);
     await this.prisma.user.update({
       where: { id: user.id },
       data: { refreshToken },
@@ -100,12 +87,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async signAccessToken(
-    userId: string,
-    email: string,
-    role: string,
-    provider: string,
-  ) {
+  async signAccessToken(userId: string, email: string, role: string, provider: string) {
     const payload = { sub: userId, email, role, provider };
     const secret = this.config.get<string>('JWT_SECRET');
     return await this.jwt.signAsync(payload, {
@@ -114,12 +96,7 @@ export class AuthService {
     });
   }
 
-  async signRefreshToken(
-    userId: string,
-    email: string,
-    role: string,
-    provider: string,
-  ) {
+  async signRefreshToken(userId: string, email: string, role: string, provider: string) {
     const payload = { sub: userId, email, role, provider };
     const secret = this.config.get<string>('JWT_SECRET');
     return await this.jwt.signAsync(payload, {
@@ -129,8 +106,7 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string) {
-    if (!refreshToken)
-      throw new UnauthorizedException('No refresh token provided');
+    if (!refreshToken) throw new UnauthorizedException('No refresh token provided');
 
     try {
       const payload = await this.jwt.verifyAsync(refreshToken, {
@@ -169,8 +145,7 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
-    if (!refreshToken)
-      throw new UnauthorizedException('No refresh token provided');
+    if (!refreshToken) throw new UnauthorizedException('No refresh token provided');
 
     try {
       const payload = await this.jwt.verifyAsync(refreshToken, {

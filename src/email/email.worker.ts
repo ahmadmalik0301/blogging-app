@@ -11,11 +11,7 @@ export class EmailWorker extends WorkerHost {
   async process(job: Job<{ to: string; subject: string; html: string }>) {
     console.log('Processing email job:', job.data);
     try {
-      await this.emailService.sendEmail(
-        job.data.to,
-        job.data.subject,
-        job.data.html,
-      );
+      await this.emailService.sendEmail(job.data.to, job.data.subject, job.data.html);
       console.log('Email sent to:', job.data.to);
     } catch (err) {
       console.error('Failed to send email:', err.message);

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import * as argon from 'argon2';
@@ -34,28 +30,18 @@ export class UserService {
       );
     }
 
-    const validOldPassword = await argon.verify(
-      existingUser?.password!,
-      oldPassword,
-    );
+    const validOldPassword = await argon.verify(existingUser?.password!, oldPassword);
     if (!validOldPassword) {
       throw new UnauthorizedException('Old password is incorrect');
     }
 
-    const isSameAsOld = await argon.verify(
-      existingUser?.password!,
-      newPassword,
-    );
+    const isSameAsOld = await argon.verify(existingUser?.password!, newPassword);
     if (isSameAsOld) {
-      throw new BadRequestException(
-        'New password cannot be the same as the old password',
-      );
+      throw new BadRequestException('New password cannot be the same as the old password');
     }
 
     if (newPassword !== confirmPassword) {
-      throw new BadRequestException(
-        'New password and confirm password do not match',
-      );
+      throw new BadRequestException('New password and confirm password do not match');
     }
 
     const hashedPassword = await argon.hash(newPassword);
@@ -83,9 +69,7 @@ export class UserService {
     //   subject: 'Password Reset',
     //   html: `<p>Your password reset token is: http://localhost:3000/user/reset-password?token=${resetToken}</p>`,
     // });
-    console.log(
-      `http://localhost:3000/user/reset-password?token=${resetToken}`,
-    );
+    console.log(`http://localhost:3000/user/reset-password?token=${resetToken}`);
     return { message: 'Password reset email sent' };
   }
   async resetPassword(token: string, newPassword: string) {
