@@ -25,6 +25,16 @@ export class AuthService {
   ) {}
 
   async localSignup(createUserDto: CreateUserDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: {
+        email: createUserDto.email,
+      },
+    });
+    if (existingUser?.provider === 'GOOGLE') {
+      throw new ConflictException(
+        'User with this Email already exist . Kindlgy use Google signup method',
+      );
+    }
     const hash = await argon.hash(createUserDto.password);
     let dob: Date | null = null;
 
@@ -203,7 +213,7 @@ export class AuthService {
     } else {
       if (existingUser.provider === 'LOCAL') {
         throw new ConflictException(
-          'A user with this email already exist. kindly use Email and password method',
+          'A user with this email already exist. Kindly use Email and password method',
         );
       }
     }
