@@ -1,6 +1,6 @@
 import {
+  BadRequestException,
   ConflictException,
-  HttpException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -26,7 +26,15 @@ export class AuthService {
 
   async localSignup(createUserDto: CreateUserDto) {
     const hash = await argon.hash(createUserDto.password);
-    const dob = new Date(createUserDto.dateOfBirth);
+    let dob: Date | null = null;
+
+    if (createUserDto.dateOfBirth) {
+      const parsed = new Date(createUserDto.dateOfBirth);
+      if (isNaN(parsed.getTime())) {
+        throw new BadRequestException('Invalid date format for dateOfBirth');
+      }
+      dob = parsed;
+    }
 
     const user = await this.prisma.user.create({
       data: {
@@ -47,6 +55,7 @@ export class AuthService {
     this.notiService.sendUserSignupNotification(name, user.email);
     return { user: safeUser };
   }
+
   async localLogin(loginDto: LoginDto) {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -80,6 +89,7 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
   async signAccessToken(
     userId: string,
     email: string,
@@ -93,6 +103,7 @@ export class AuthService {
       secret,
     });
   }
+
   async signRefreshToken(
     userId: string,
     email: string,
@@ -106,6 +117,7 @@ export class AuthService {
       secret,
     });
   }
+
   async refreshToken(refreshToken: string) {
     if (!refreshToken)
       throw new UnauthorizedException('No refresh token provided');
@@ -163,6 +175,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+
   async googleLogin(user: any) {
     if (!user) {
       throw new UnauthorizedException('Google authentication failed');

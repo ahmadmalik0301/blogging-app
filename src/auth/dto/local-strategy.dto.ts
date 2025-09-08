@@ -4,6 +4,7 @@ import {
   IsString,
   MinLength,
   IsDateString,
+  IsOptional,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -30,6 +31,7 @@ export class CreateUserDto {
 
   @IsDateString()
   @Transform(({ value }) => value?.trim())
+  @IsOptional()
   dateOfBirth: string;
 
   @IsString()
