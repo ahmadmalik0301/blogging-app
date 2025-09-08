@@ -16,7 +16,7 @@ import { GetCookie } from './decorators/cookie-decorator';
 import { SetRefreshTokenInterceptor } from './interceptors/set-refresh-token.interceptor';
 import { ClearRefreshTokenInterceptor } from './interceptors/clear-refresh-token.interceptor';
 
-@ApiTags('Auth') // groups all endpoints in Swagger under "Auth"
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

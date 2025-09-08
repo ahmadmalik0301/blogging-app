@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ debug: true });
 import { PrismaClient } from '@prisma/client';
 import * as argon from 'argon2';
 

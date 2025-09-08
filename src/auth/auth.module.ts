@@ -17,5 +17,6 @@ import { GoogleStrategy } from './strategies/google-strategy';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, GoogleStrategy],
+  exports: [BullModule],
 })
 export class AuthModule {}
