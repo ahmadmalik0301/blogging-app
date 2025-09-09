@@ -77,12 +77,4 @@ npm run start:dev
 
 # 5. Visit Swagger API docs
 http://localhost:3000/api/docs
-
-# 6. (Optional) Start the React Frontend
-cd frontend
-npm install
-npm start
-
-# Frontend will be available at:
-http://localhost:3000
 ```
