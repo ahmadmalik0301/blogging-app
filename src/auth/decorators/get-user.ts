@@ -1,9 +1,19 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext, NotFoundException } from '@nestjs/common';
 
 export const GetUser = createParamDecorator((data: string | undefined, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
-  if (data) {
-    return request.user[data];
+  const user = request.user;
+
+  if (!user) {
+    throw new NotFoundException('User not found in request');
   }
-  return request.user;
+
+  if (data) {
+    if (!(data in user)) {
+      throw new NotFoundException(`Property "${data}" not found on user`);
+    }
+    return user[data];
+  }
+
+  return user;
 });

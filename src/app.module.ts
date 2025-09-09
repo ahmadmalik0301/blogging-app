@@ -7,6 +7,7 @@ import { EmailModule } from './email/email.module';
 import { BullModule } from '@nestjs/bullmq';
 import { GatewayModule } from './gateway/gateway.module';
 import { UserModule } from './user/user.module';
+import { LikeModule } from './like/like.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UserModule } from './user/user.module';
     EmailModule,
     GatewayModule,
     UserModule,
+    LikeModule,
   ],
 })
 export class AppModule {}
