@@ -77,4 +77,31 @@ npm run start:dev
 
 # 5. Visit Swagger API docs
 http://localhost:3000/api/docs
+
+# 6. (Optional) Start the React Frontend
+cd frontend
+npm install
+npm start
+
+# Frontend will be available at:
+http://localhost:3000
 ```
+
+## 🌐 Frontend
+
+This project now includes a complete React-based frontend located in the `/frontend` directory. The frontend provides:
+
+- **Modern UI**: Clean, responsive design with authentication
+- **Full Integration**: Works with all backend APIs
+- **Real-time Features**: WebSocket integration for live notifications
+- **Admin Dashboard**: Role-based access for post management
+- **Mobile Responsive**: Optimized for all devices
+
+### Frontend Features
+- User authentication (local + Google OAuth)
+- Blog post viewing, creation, editing, and deletion
+- Like/unlike functionality
+- Real-time notifications for admins
+- Responsive design
+
+See the [Frontend README](./frontend/README.md) for detailed setup and usage instructions.
