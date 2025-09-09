@@ -8,6 +8,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new PrismaClientExceptionFilter());
+  app.enableCors({
+    origin: 'http://localhost:3002',
+    credentials: true,
+  });
   app.use(cookieParser('secret'));
   app.useGlobalPipes(
     new ValidationPipe({
