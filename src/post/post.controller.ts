@@ -6,10 +6,18 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -33,14 +41,17 @@ export class PostController {
   create(@Body() createPostDto: CreatePostDto) {
     return this.postService.create(createPostDto);
   }
+
   @UseInterceptors(CacheInterceptor)
   @CacheKey('allPosts')
   @Get()
-  @ApiOperation({ summary: 'Get all posts' })
+  @ApiOperation({ summary: 'Get all posts with pagination' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'List of all posts' })
-  findAll() {
+  findAll(@Query('page') page: number = 1, @Query('limit') limit: number = 5) {
     console.log('Fetching From DB.......');
-    return this.postService.findAll();
+    return this.postService.findAll(Number(page), Number(limit));
   }
 
   @Get(':id')

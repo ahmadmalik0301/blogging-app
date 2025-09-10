@@ -11,15 +11,23 @@ export class SetRefreshTokenInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
-        if (data?.refreshToken) {
-          res.cookie('refresh_token', data.refreshToken, {
+        const token = data?.refreshToken || data?.data?.refreshToken;
+        if (token) {
+          res.cookie('refresh_token', token, {
             httpOnly: true,
             signed: true,
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
           });
-          delete data.refreshToken;
+
+          if (data?.refreshToken) delete data.refreshToken;
+          if (data?.data?.refreshToken) delete data.data.refreshToken;
         }
-        return data;
+
+        return {
+          status: 'success',
+          message: data?.message || 'Operation successful',
+          data: data?.data || data,
+        };
       }),
     );
   }

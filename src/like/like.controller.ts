@@ -1,28 +1,31 @@
-import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards, Body, Query } from '@nestjs/common';
 import { LikeService } from './like.service';
 import { JwtAuthGuard } from 'src/auth/Guards/jwt-guard';
 import { GetUser } from 'src/auth/decorators/get-user';
 
-@Controller('like/:id')
+@Controller('like')
 export class LikeController {
   constructor(private likeService: LikeService) {}
 
-  @Post('/post/toggle')
+  @Post('toggle/:postId')
   @UseGuards(JwtAuthGuard)
-  toggleLike(@GetUser('id') userId: string, @Param('id') postId: string) {
+  toggleLike(@GetUser('id') userId: string, @Param('postId') postId: string) {
     return this.likeService.toggleLike(userId, postId);
   }
-  @Get('/post/count')
-  getPostLikeCount(@Param('id') postId: string) {
+
+  @Get('count/:postId')
+  getPostLikeCount(@Param('postId') postId: string) {
     return this.likeService.getPostLikeCount(postId);
   }
-  @Get('/post/status')
+
+  @Get('status/:postId')
   @UseGuards(JwtAuthGuard)
-  getPostLikeStatus(@GetUser('id') userId: string, @Param('id') postId: string) {
+  getPostLikeStatus(@GetUser('id') userId: string, @Param('postId') postId: string) {
     return this.likeService.getPostLikeStatus(userId, postId);
   }
-  @Get('/post/users')
-  getPostLikers(@Param('id') postId: string) {
+
+  @Get('users/:postId')
+  getPostLikers(@Param('postId') postId: string) {
     return this.likeService.getPostLikers(postId);
   }
 }

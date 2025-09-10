@@ -29,7 +29,7 @@ import { CacheModule } from '@nestjs/cache-manager';
           stores: [
             new Keyv({
               store: new KeyvRedis('redis://localhost:6380'),
-              ttl: 60_000, // 60 seconds
+              ttl: 60_000,
             }),
           ],
         };

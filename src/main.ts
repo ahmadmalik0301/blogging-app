@@ -1,17 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { PrismaClientExceptionFilter } from './prisma/prisma.exception';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllExceptionsFilter } from './ExceptionFilter/all.exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalFilters(new PrismaClientExceptionFilter());
   app.enableCors({
     origin: 'http://localhost:3002',
     credentials: true,
   });
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.use(cookieParser('secret'));
   app.useGlobalPipes(
     new ValidationPipe({

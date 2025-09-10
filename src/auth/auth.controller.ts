@@ -62,11 +62,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth redirect callback' })
   @ApiResponse({ status: 200, description: 'User authenticated with Google' })
   async googleAuthRedirect(@GetUser() user: any) {
-    const {
-      user: existingUser,
-      accessToken,
-      refreshToken,
-    } = await this.authService.googleLogin(user);
-    return { accessToken, refreshToken, user: existingUser };
+    return this.authService.googleLogin(user);
   }
 }

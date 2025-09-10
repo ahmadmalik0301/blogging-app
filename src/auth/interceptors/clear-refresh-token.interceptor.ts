@@ -12,7 +12,11 @@ export class ClearRefreshTokenInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         res.clearCookie('refresh_token');
-        return data;
+        return {
+          status: 'success',
+          message: data?.message || 'Logged out successfully',
+          data: data?.data || data,
+        };
       }),
     );
   }

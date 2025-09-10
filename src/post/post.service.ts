@@ -11,22 +11,42 @@ export class PostService {
     private prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
   async create(createPostDto: CreatePostDto) {
     const post = await this.prisma.post.create({
       data: createPostDto,
     });
     await this.cacheManager.del('allPosts');
-    return { message: 'Post created Successfully', post };
+    return { status: 'success', message: 'Post created successfully', data: post };
   }
-  async findAll() {
-    return await this.prisma.post.findMany();
+
+  async findAll(page = 1, limit = 5) {
+    const skip = (page - 1) * limit;
+    const [posts, total] = await Promise.all([
+      this.prisma.post.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.post.count(),
+    ]);
+
+    return {
+      status: 'success',
+      message: 'Posts retrieved successfully',
+      data: posts,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
-    const post = await this.prisma.post.findFirstOrThrow({
-      where: { id },
-    });
-    return { post };
+    const post = await this.prisma.post.findFirstOrThrow({ where: { id } });
+    return { status: 'success', message: 'Post retrieved successfully', data: post };
   }
 
   async update(id: string, updatePostDto: UpdatePostDto) {
@@ -35,14 +55,12 @@ export class PostService {
       data: { ...updatePostDto },
     });
     await this.cacheManager.del('allPosts');
-    return { message: 'Post Updated Successfully', post };
+    return { status: 'success', message: 'Post updated successfully', data: post };
   }
 
   async remove(id: string) {
-    const post = await this.prisma.post.delete({
-      where: { id },
-    });
+    const post = await this.prisma.post.delete({ where: { id } });
     await this.cacheManager.del('allPosts');
-    return { message: 'Deleted Successfully', post };
+    return { status: 'success', message: 'Post deleted successfully', data: post };
   }
 }
