@@ -12,7 +12,6 @@ export class PostService {
     });
     return { message: 'Post created Successfully', post };
   }
-
   async findAll() {
     return await this.prisma.post.findMany();
   }
