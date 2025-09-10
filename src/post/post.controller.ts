@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -7,6 +17,7 @@ import { JwtAuthGuard } from 'src/auth/Guards/jwt-guard';
 import { RolesGuard } from 'src/auth/Guards/roles-guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
+import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
 
 @ApiTags('posts')
 @ApiBearerAuth()
@@ -22,12 +33,13 @@ export class PostController {
   create(@Body() createPostDto: CreatePostDto) {
     return this.postService.create(createPostDto);
   }
-
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('allPosts')
   @Get()
   @ApiOperation({ summary: 'Get all posts' })
   @ApiResponse({ status: 200, description: 'List of all posts' })
   findAll() {
-    console.log('getting data from db');
+    console.log('Fetching From DB.......');
     return this.postService.findAll();
   }
 
