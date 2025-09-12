@@ -25,7 +25,7 @@ export class LikeController {
   }
 
   @Get('users/:postId')
-  getPostLikers(@Param('postId') postId: string) {
-    return this.likeService.getPostLikers(postId);
+  getPostLikers(@Param('postId') postId: string, @Query('page') page = '1') {
+    return this.likeService.getPostLikers(postId, Number(page));
   }
 }

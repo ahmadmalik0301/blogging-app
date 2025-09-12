@@ -49,10 +49,24 @@ export class LikeService {
     };
   }
 
-  async getPostLikers(postId: string) {
+  async getPostLikers(postId: string, page = 1) {
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    // Total count for pagination metadata
+    const total = await this.prisma.like.count({
+      where: { postId },
+    });
+
     const likers = await this.prisma.like.findMany({
       where: { postId },
-      include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+      skip,
+      take: limit,
     });
 
     const maskEmail = (email: string) => {
@@ -65,6 +79,12 @@ export class LikeService {
     return {
       status: 'success',
       message: 'Post likers retrieved',
+      meta: {
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+        perPage: limit,
+      },
       data: likers.map((like) => ({
         ...like.user,
         email: maskEmail(like.user.email),
