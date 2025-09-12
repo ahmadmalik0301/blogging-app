@@ -54,13 +54,13 @@ export class PostService {
       where: { id },
       data: { ...updatePostDto },
     });
-    await this.cacheManager.del('allPosts');
+    await this.cacheManager.del('post/' + id);
     return { status: 'success', message: 'Post updated successfully', data: post };
   }
 
   async remove(id: string) {
     const post = await this.prisma.post.delete({ where: { id } });
-    await this.cacheManager.del('allPosts');
+    await this.cacheManager.del('post/' + id);
     return { status: 'success', message: 'Post deleted successfully', data: post };
   }
 }

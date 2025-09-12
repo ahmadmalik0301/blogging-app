@@ -42,8 +42,6 @@ export class PostController {
     return this.postService.create(createPostDto);
   }
 
-  @UseInterceptors(CacheInterceptor)
-  @CacheKey('allPosts')
   @Get()
   @ApiOperation({ summary: 'Get all posts with pagination' })
   @ApiQuery({ name: 'page', required: false, type: Number })
@@ -55,6 +53,7 @@ export class PostController {
   }
 
   @Get(':id')
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get a single post by ID' })
   @ApiParam({ name: 'id', description: 'Unique post ID' })
   @ApiResponse({ status: 200, description: 'Post retrieved successfully' })

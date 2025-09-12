@@ -52,13 +52,23 @@ export class LikeService {
   async getPostLikers(postId: string) {
     const likers = await this.prisma.like.findMany({
       where: { postId },
-      include: { user: { select: { id: true, firstName: true, lastName: true } } },
+      include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
     });
+
+    const maskEmail = (email: string) => {
+      const [local, domain] = email.split('@');
+      if (local.length <= 2) return '*'.repeat(local.length) + '@' + domain;
+      const visible = local.slice(0, 2);
+      return `${visible}${'*'.repeat(local.length - 2)}@${domain}`;
+    };
 
     return {
       status: 'success',
       message: 'Post likers retrieved',
-      data: likers.map((like) => like.user),
+      data: likers.map((like) => ({
+        ...like.user,
+        email: maskEmail(like.user.email),
+      })),
     };
   }
 }
