@@ -67,11 +67,11 @@ export class UserService {
       { sub: user?.id },
       { expiresIn: '10m', secret: this.config.get('JWT_SECRET') },
     );
-    // await this.emailQueue.add('sendEmail', {
-    //   to: user.email,
-    //   subject: 'Password Reset',
-    //   html: `<p>Your password reset token is: ${this.config.get('FRONTEND_URL')}/user/reset-password?token=${resetToken}</p>`,
-    // });
+    await this.emailQueue.add('sendEmail', {
+      to: user.email,
+      subject: 'Password Reset',
+      html: `<p>Your password reset token is: ${this.config.get('FRONTEND_URL')}/user/reset-password?token=${resetToken}</p>`,
+    });
     console.log(`${this.config.get('FRONTEND_URL')}/user/reset-password?token=${resetToken}`);
     return { message: 'Password reset email sent' };
   }

@@ -33,7 +33,7 @@ async function bootstrap() {
       `This is a backend of a Blogging website, 
       where admin can perform CRUD operations on post. 
       Like User can login using Local and Google auth methods. 
-      Post routes are protected using JWT`,
+      Post routes are protected using JWT (Beta phase not complete documentation yet)`,
     )
     .setVersion('1.0')
     .addBearerAuth()
