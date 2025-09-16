@@ -45,11 +45,11 @@ export class AuthService {
     const { password, ...safeUser } = user;
     const fullName = `${user.firstName} ${user.lastName}`;
 
-    //await this.emailQueue.add('sendEmail', {
-    // to: this.config.get<string>('ADMIN_EMAIL'),
-    //subject: 'New User joined!',
-    // html: newUserHtml(fullName, user.email),
-    //});
+    await this.emailQueue.add('sendEmail', {
+      to: this.config.get<string>('ADMIN_EMAIL'),
+      subject: 'New User joined!',
+      html: newUserHtml(fullName, user.email),
+    });
     this.notiService.sendUserSignupNotification(fullName, user.email);
 
     return {

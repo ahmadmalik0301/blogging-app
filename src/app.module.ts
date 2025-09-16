@@ -18,12 +18,13 @@ import { CacheModule } from '@nestjs/cache-manager';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         connection: {
-          host: configService.get<string>('REDIS_HOST'),
-          port: configService.get<number>('REDIS_PORT'),
+          url: configService.get<string>('CACHE_REDIS_URL'),
         },
         defaultJobOptions: {
           attempts: 3,
           backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: { age: 5 * 60 },
+          removeOnFail: { age: 5 * 60 }, //
         },
       }),
     }),
