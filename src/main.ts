@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './ExceptionFilter/all.exception.filter';
 import { ConfigService } from '@nestjs/config';
+import type { Request, Response } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +28,7 @@ async function bootstrap() {
     }),
   );
 
+  // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('Blogging Website backend')
     .setDescription(
@@ -42,6 +44,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
+  // ✅ Health check route
+  app.use('/health', (req: Request, res: Response) => {
+    res.send('API is running');
+  });
   await app.listen(configService.get<number>('PORT') ?? 3000, '0.0.0.0');
 }
 
