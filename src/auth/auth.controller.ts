@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Res,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { CreateUserDto, LoginDto } from './dto/local-strategy.dto';
 import { AuthService } from './auth.service';
@@ -7,11 +16,17 @@ import { GoogleGuard } from './Guards/google-guard';
 import { GetCookie } from './decorators/cookie-decorator';
 import { SetRefreshTokenInterceptor } from './interceptors/set-refresh-token.interceptor';
 import { ClearRefreshTokenInterceptor } from './interceptors/clear-refresh-token.interceptor';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
+import { SetRefreshTokenAndRedirectInterceptor } from './interceptors/set-refresh-and-redirect.interceptor';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private config: ConfigService,
+  ) {}
 
   @Post('/signup')
   @ApiOperation({ summary: 'Register a new user' })
@@ -58,10 +73,15 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(GoogleGuard)
-  @UseInterceptors(SetRefreshTokenInterceptor)
+  @UseInterceptors(SetRefreshTokenAndRedirectInterceptor)
   @ApiOperation({ summary: 'Google OAuth redirect callback' })
   @ApiResponse({ status: 200, description: 'User authenticated with Google' })
   async googleAuthRedirect(@GetUser() user: any) {
-    return this.authService.googleLogin(user);
+    const response = await this.authService.googleLogin(user);
+    const frontendUrl = this.config.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    return {
+      refreshToken: response.data.refreshToken,
+      redirectUrl: `${frontendUrl}/auth/success`,
+    };
   }
 }

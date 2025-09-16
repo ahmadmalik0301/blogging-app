@@ -1,44 +1,39 @@
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { MinWords, MaxWords } from './validation.decorator';
 
 export class CreatePostDto {
   @ApiProperty({
     example: 'The Future of AI',
-    description: 'Title of the blog post (10–25 characters)',
-    minLength: 10,
-    maxLength: 25,
+    description: 'Title of the blog post (2–6 words)',
   })
   @IsString()
   @IsNotEmpty()
-  @MinLength(10)
-  @MaxLength(25)
+  @MinWords(2)
+  @MaxWords(6)
   @Transform(({ value }) => value?.trim())
   title: string;
 
   @ApiProperty({
     example: 'Exploring how AI will shape the next decade',
-    description: 'Short tagline (10–70 characters)',
-    minLength: 10,
-    maxLength: 70,
+    description: 'Short tagline (5–15 words)',
   })
   @IsString()
   @IsNotEmpty()
-  @MinLength(10)
-  @MaxLength(70)
+  @MinWords(5)
+  @MaxWords(15)
   @Transform(({ value }) => value?.trim())
   tagLine: string;
 
   @ApiProperty({
     example: 'Artificial Intelligence (AI) is transforming industries...',
-    description: 'Main content of the blog post (10–1000 characters)',
-    minLength: 10,
-    maxLength: 1000,
+    description: 'Main content (minimum 50 words, maximum 500 words)',
   })
   @IsString()
   @IsNotEmpty()
-  @MinLength(10)
-  @MaxLength(1000)
+  @MinWords(50)
+  @MaxWords(500)
   @Transform(({ value }) => value?.trim())
   body: string;
 }

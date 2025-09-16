@@ -6,7 +6,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway(3001, { cors: true })
@@ -46,6 +46,13 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 
       console.log(`Admin connected: ${user.email}`);
       client.data.user = user;
+
+      const recent = await this.prisma.notification.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+
+      client.emit('notification-backlog', recent);
     } catch (err) {
       console.log('Token verification failed:', err.message);
       client.disconnect(true);
@@ -61,9 +68,13 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     }
   }
 
-  sendUserSignupNotification(name: string, email: string) {
-    this.server.emit('new-user-signup', {
-      message: `New user signed up: ${name} (${email})`,
+  async sendUserSignupNotification(name: string, email: string) {
+    const notification = await this.prisma.notification.create({
+      data: {
+        message: `New user signed up: ${name} (${email})`,
+      },
     });
+
+    this.server.emit('new-user-signup', notification);
   }
 }

@@ -178,7 +178,17 @@ export class AuthService {
     return {
       status: 'success',
       message: 'Google login successful',
-      data: { user: existingUser, accessToken, refreshToken },
+      data: {
+        user: {
+          id: existingUser.id,
+          firstName: existingUser.firstName,
+          lastName: existingUser.lastName,
+          role: existingUser.role,
+          provider: existingUser.provider,
+        },
+        accessToken,
+        refreshToken,
+      },
     };
   }
 

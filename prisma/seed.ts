@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config({ debug: true });
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role, Provider } from '@prisma/client';
 import * as argon from 'argon2';
 
 const prisma = new PrismaClient();
@@ -28,7 +28,14 @@ async function main() {
   });
   console.log('Admin user ready:', admin.email);
 
-  // Dummy users (Pakistani names)
+  // Create notification for admin
+  await prisma.notification.create({
+    data: {
+      message: `User ${admin.firstName} ${admin.lastName} have joined our app with email "${admin.email}"`,
+    },
+  });
+
+  // Dummy users (Pakistani names) - 14 more users to make total 15
   const dummyUsers = [
     { firstName: 'Ali', lastName: 'Khan', email: 'ali.khan@example.com' },
     { firstName: 'Sara', lastName: 'Malik', email: 'sara.malik@example.com' },
@@ -40,22 +47,37 @@ async function main() {
     { firstName: 'Zainab', lastName: 'Akhtar', email: 'zainab.akhtar@example.com' },
     { firstName: 'Hamza', lastName: 'Farooq', email: 'hamza.farooq@example.com' },
     { firstName: 'Ayesha', lastName: 'Nawaz', email: 'ayesha.nawaz@example.com' },
+    { firstName: 'Omar', lastName: 'Hassan', email: 'omar.hassan@example.com' },
+    { firstName: 'Layla', lastName: 'Qureshi', email: 'layla.qureshi@example.com' },
+    { firstName: 'Tariq', lastName: 'Mahmood', email: 'tariq.mahmood@example.com' },
+    { firstName: 'Nadia', lastName: 'Rehman', email: 'nadia.rehman@example.com' },
   ];
 
   const hashedPass = await argon.hash('password123'); // default password for all
-  await prisma.user.createMany({
-    data: dummyUsers.map((u) => ({
-      email: u.email,
-      firstName: u.firstName,
-      lastName: u.lastName,
-      password: hashedPass,
-      role: 'USER',
-      provider: 'LOCAL',
-      dateOfBirth: new Date('1998-01-01'),
-    })),
-    skipDuplicates: true,
-  });
-  console.log('10 dummy users created');
+
+  // Create users and notifications
+  for (const userData of dummyUsers) {
+    const user = await prisma.user.create({
+      data: {
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        password: hashedPass,
+        role: 'USER',
+        provider: 'LOCAL',
+        dateOfBirth: new Date('1998-01-01'),
+      },
+    });
+
+    // Create notification for each user
+    await prisma.notification.create({
+      data: {
+        message: `User ${user.firstName} ${user.lastName} have joined our app with email "${user.email}"`,
+      },
+    });
+  }
+
+  console.log('14 dummy users created with notifications');
 
   // Articles instead of placeholder text
   const articles = [
@@ -115,26 +137,55 @@ async function main() {
     data: articles,
     skipDuplicates: true,
   });
-  console.log('10 real-looking posts created');
+  console.log('10 posts created');
 
-  // Likes generation (30–40 random likes)
-  const users = await prisma.user.findMany({ where: { role: 'USER' } });
-  const posts = await prisma.post.findMany();
+  // Get all users and posts
+  const allUsers = await prisma.user.findMany();
+  const allPosts = await prisma.post.findMany();
 
+  // Ensure each user likes at least 8 posts
   const likesData: { userId: string; postId: string }[] = [];
-  const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-  for (let i = 0; i < randomInt(70, 100); i++) {
-    const user = users[randomInt(0, users.length - 1)];
-    const post = posts[randomInt(0, posts.length - 1)];
+  for (const user of allUsers) {
+    // Create a set of post indices to ensure unique likes for this user
+    const postIndices = new Set<number>();
 
-    if (!likesData.find((l) => l.userId === user.id && l.postId === post.id)) {
-      likesData.push({ userId: user.id, postId: post.id });
+    // Add at least 8 unique posts for this user
+    while (postIndices.size < 8) {
+      const randomIndex = Math.floor(Math.random() * allPosts.length);
+      postIndices.add(randomIndex);
+    }
+
+    // Add these likes to our data
+    for (const index of postIndices) {
+      likesData.push({
+        userId: user.id,
+        postId: allPosts[index].id,
+      });
+    }
+
+    // Add some additional random likes (between 0-5 more)
+    const additionalLikes = Math.floor(Math.random() * 6);
+    for (let i = 0; i < additionalLikes; i++) {
+      const randomIndex = Math.floor(Math.random() * allPosts.length);
+      // Check if this like already exists for this user
+      if (!postIndices.has(randomIndex)) {
+        postIndices.add(randomIndex);
+        likesData.push({
+          userId: user.id,
+          postId: allPosts[randomIndex].id,
+        });
+      }
     }
   }
 
-  await prisma.like.createMany({ data: likesData, skipDuplicates: true });
-  console.log(`${likesData.length} random likes added`);
+  // Create all likes
+  await prisma.like.createMany({
+    data: likesData,
+    skipDuplicates: true,
+  });
+
+  console.log(`${likesData.length} likes added, each user likes at least 8 posts`);
 }
 
 main()
