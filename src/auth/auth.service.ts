@@ -169,8 +169,6 @@ export class AuthService {
     } else if (existingUser.provider === Provider.LOCAL) {
       throw new ConflictException('User exists. Please use Email & Password method');
     }
-
-    const accessToken = await this.signAccessToken(existingUser);
     const refreshToken = await this.signRefreshToken(existingUser);
 
     await this.prisma.user.update({ where: { id: existingUser.id }, data: { refreshToken } });
@@ -179,14 +177,6 @@ export class AuthService {
       status: 'success',
       message: 'Google login successful',
       data: {
-        user: {
-          id: existingUser.id,
-          firstName: existingUser.firstName,
-          lastName: existingUser.lastName,
-          role: existingUser.role,
-          provider: existingUser.provider,
-        },
-        accessToken,
         refreshToken,
       },
     };

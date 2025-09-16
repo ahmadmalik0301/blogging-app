@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from './prisma/prisma.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { PostModule } from './post/post.module';
 import { EmailModule } from './email/email.module';
@@ -13,22 +13,29 @@ import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
-    BullModule.forRoot({
-      connection: {
-        host: 'localhost',
-        port: 6379,
-      },
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 2000 },
-      },
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'),
+        },
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+        },
+      }),
     }),
+
     CacheModule.registerAsync({
-      useFactory: async () => {
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
         return {
           stores: [
             new Keyv({
-              store: new KeyvRedis('redis://localhost:6380'),
+              store: new KeyvRedis(configService.get<string>('CACHE_REDIS_URL')),
               ttl: 60_000,
             }),
           ],
@@ -36,6 +43,7 @@ import { CacheModule } from '@nestjs/cache-manager';
       },
       isGlobal: true,
     }),
+
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,

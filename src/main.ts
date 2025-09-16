@@ -4,15 +4,21 @@ import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './ExceptionFilter/all.exception.filter';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const configService = app.get(ConfigService);
+
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: configService.get<string>('FRONTEND_URL') || 'http://localhost:5173',
     credentials: true,
   });
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.use(cookieParser('secret'));
+
+  app.use(cookieParser(configService.get<string>('COOKIE_SECRET')));
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -20,6 +26,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
   const config = new DocumentBuilder()
     .setTitle('Blogging Website backend')
     .setDescription(
@@ -34,7 +41,8 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
-  await app.listen(process.env.PORT ?? 3000);
+
+  await app.listen(configService.get<number>('PORT') ?? 3000);
 }
 
 bootstrap();
