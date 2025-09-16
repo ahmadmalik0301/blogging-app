@@ -19,6 +19,7 @@ export class SetRefreshTokenAndRedirectInterceptor implements NestInterceptor {
             httpOnly: true,
             signed: true,
             maxAge: 7 * 24 * 60 * 60 * 1000,
+            sameSite: 'none',
           });
         }
 

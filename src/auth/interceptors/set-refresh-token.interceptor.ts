@@ -16,6 +16,7 @@ export class SetRefreshTokenInterceptor implements NestInterceptor {
           res.cookie('refresh_token', token, {
             httpOnly: true,
             signed: true,
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
           });
 
