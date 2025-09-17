@@ -15,7 +15,7 @@ export class ClearRefreshTokenInterceptor implements NestInterceptor {
           httpOnly: true,
           signed: true,
           secure: true,
-          sameSite: 'none',
+          sameSite: 'lax',
         });
         return {
           status: 'success',
