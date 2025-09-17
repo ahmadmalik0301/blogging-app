@@ -13,17 +13,6 @@ export class LikeController {
     return this.likeService.toggleLike(userId, postId);
   }
 
-  @Get('count/:postId')
-  getPostLikeCount(@Param('postId') postId: string) {
-    return this.likeService.getPostLikeCount(postId);
-  }
-
-  @Get('status/:postId')
-  @UseGuards(JwtAuthGuard)
-  getPostLikeStatus(@GetUser('id') userId: string, @Param('postId') postId: string) {
-    return this.likeService.getPostLikeStatus(userId, postId);
-  }
-
   @Get('users/:postId')
   getPostLikers(@Param('postId') postId: string, @Query('page') page = '1') {
     return this.likeService.getPostLikers(postId, Number(page));

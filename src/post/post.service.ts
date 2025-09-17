@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -20,13 +20,19 @@ export class PostService {
     return { status: 'success', message: 'Post created successfully', data: post };
   }
 
-  async findAll(page = 1, limit = 5) {
+  async findAll(page = 1, limit = 5, userId?: string) {
     const skip = (page - 1) * limit;
+
     const [posts, total] = await Promise.all([
       this.prisma.post.findMany({
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          likes: {
+            select: { userId: true },
+          },
+        },
       }),
       this.prisma.post.count(),
     ]);
@@ -34,7 +40,16 @@ export class PostService {
     return {
       status: 'success',
       message: 'Posts retrieved successfully',
-      data: posts,
+      data: posts.map((post) => ({
+        id: post.id,
+        title: post.title,
+        tagLine: post.tagLine,
+        body: post.body,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        likeCount: post.likes.length,
+        liked: userId ? post.likes.some((l) => l.userId === userId) : false,
+      })),
       meta: {
         total,
         page,
@@ -44,9 +59,35 @@ export class PostService {
     };
   }
 
-  async findOne(id: string) {
-    const post = await this.prisma.post.findFirstOrThrow({ where: { id } });
-    return { status: 'success', message: 'Post retrieved successfully', data: post };
+  async findOne(postId: string, userId?: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        likes: {
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return {
+      status: 'success',
+      message: 'Post retrieved successfully',
+      data: {
+        id: post.id,
+        title: post.title,
+        tagLine: post.tagLine,
+        body: post.body,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+
+        likeCount: post.likes.length,
+        liked: userId ? post.likes.some((l) => l.userId === userId) : false,
+      },
+    };
   }
 
   async update(id: string, updatePostDto: UpdatePostDto) {

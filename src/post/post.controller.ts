@@ -25,7 +25,8 @@ import { JwtAuthGuard } from 'src/auth/Guards/jwt-guard';
 import { RolesGuard } from 'src/auth/Guards/roles-guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
-import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
+import { CacheInterceptor } from '@nestjs/cache-manager';
+import { GetUser } from 'src/auth/decorators/get-user';
 
 @ApiTags('posts')
 @ApiBearerAuth()
@@ -47,9 +48,12 @@ export class PostController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'List of all posts' })
-  findAll(@Query('page') page: number = 1, @Query('limit') limit: number = 5) {
-    console.log('Fetching From DB.......');
-    return this.postService.findAll(Number(page), Number(limit));
+  findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
+    @GetUser('id') userId: string,
+  ) {
+    return this.postService.findAll(Number(page), Number(limit), userId);
   }
 
   @Get(':id')
@@ -57,8 +61,8 @@ export class PostController {
   @ApiOperation({ summary: 'Get a single post by ID' })
   @ApiParam({ name: 'id', description: 'Unique post ID' })
   @ApiResponse({ status: 200, description: 'Post retrieved successfully' })
-  findOne(@Param('id') id: string) {
-    return this.postService.findOne(id);
+  findOne(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.postService.findOne(id, userId);
   }
 
   @Patch(':id')

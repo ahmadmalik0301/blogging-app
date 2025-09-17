@@ -29,31 +29,10 @@ export class LikeService {
     };
   }
 
-  async getPostLikeCount(postId: string) {
-    const count = await this.prisma.like.count({ where: { postId } });
-    return {
-      status: 'success',
-      message: 'Post like count retrieved',
-      data: { postId, likeCount: count },
-    };
-  }
-
-  async getPostLikeStatus(userId: string, postId: string) {
-    const existingLike = await this.prisma.like.findUnique({
-      where: { userId_postId: { userId, postId } },
-    });
-    return {
-      status: 'success',
-      message: 'Post like status retrieved',
-      data: { postId, liked: !!existingLike },
-    };
-  }
-
   async getPostLikers(postId: string, page = 1) {
     const limit = 5;
     const skip = (page - 1) * limit;
 
-    // Total count for pagination metadata
     const total = await this.prisma.like.count({
       where: { postId },
     });
