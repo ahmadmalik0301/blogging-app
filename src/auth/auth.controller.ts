@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Post,
-  Res,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { CreateUserDto, LoginDto } from './dto/local-strategy.dto';
 import { AuthService } from './auth.service';
@@ -17,7 +8,6 @@ import { GetCookie } from './decorators/cookie-decorator';
 import { SetRefreshTokenInterceptor } from './interceptors/set-refresh-token.interceptor';
 import { ClearRefreshTokenInterceptor } from './interceptors/clear-refresh-token.interceptor';
 import { ConfigService } from '@nestjs/config';
-import type { Response } from 'express';
 import { SetRefreshTokenAndRedirectInterceptor } from './interceptors/set-refresh-and-redirect.interceptor';
 
 @ApiTags('Auth')
@@ -77,11 +67,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth redirect callback' })
   @ApiResponse({ status: 200, description: 'User authenticated with Google' })
   async googleAuthRedirect(@GetUser() user: any) {
-    const response = await this.authService.googleLogin(user);
     const frontendUrl = this.config.get<string>('FRONTEND_URL') || 'http://localhost:5173';
-    return {
-      refreshToken: response.data.refreshToken,
-      redirectUrl: `${frontendUrl}/auth/success`,
-    };
+    try {
+      const response = await this.authService.googleLogin(user);
+      return {
+        refreshToken: response.data.refreshToken,
+        redirectUrl: `${frontendUrl}/auth/success`,
+      };
+    } catch (err: any) {
+      const errorMessage = encodeURIComponent(err.message || 'Google login failed');
+      return {
+        redirectUrl: `${frontendUrl}/auth/failure?error=${errorMessage}`,
+      };
+    }
   }
 }
