@@ -1,6 +1,6 @@
 # 📝 Blogging Platform Backend
 
-A backend API for a blogging platform built with **NestJS**, featuring authentication, role-based access control, real-time notifications, and email queuing.
+A backend API for a blogging platform built with **NestJS**, featuring authentication, role-based access control, post liking, real-time notifications, and email queuing.
 
 ---
 
@@ -15,7 +15,13 @@ A backend API for a blogging platform built with **NestJS**, featuring authentic
 - **Authorization**
   - Role-based access:
     - **Admin** → Create, update, delete posts
-    - **User** → View posts only
+    - **User** → View posts, like posts
+
+- **Post Liking System**
+  - Users can **like or unlike posts**
+  - Each like is tracked in the database
+  - Prevents duplicate likes from the same user
+  - When a post is liked, a **notification is stored in the database** for the admin
 
 - **Email Notifications**
   - Whenever a new user signs up, the **Admin receives an email**
@@ -23,7 +29,10 @@ A backend API for a blogging platform built with **NestJS**, featuring authentic
 
 - **Real-time Notifications**
   - Implemented with **WebSockets (Socket.IO)**
-  - Admin is notified instantly on new user signup
+  - Admin receives instant notifications for:
+    - New user signups
+    - Post likes from users
+  - Notifications are also **persisted in the database** for later viewing
 
 - **Database & Queues**
   - **PostgreSQL** (via Docker) for persistent storage
@@ -61,20 +70,10 @@ npm install
 # 2. Start required services (PostgreSQL & Redis) with Docker
 docker compose up -d
 
-# 3. Create a .env file in the project root and add the following:
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mydb?schema=public
-JWT_SECRET=xxxxxx
-ADMIN_EMAIL=xxxxxx
-ADMIN_PASS=xxxxxx
-SENDER_EMAIL=xxxxxx
-SGMAIL_AUTH=xxxxxx
-GOOGLE_CLIENT_ID=xxxxxx
-GOOGLE_CLIENT_SECRET=xxxxxx
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/redirect
+# 3. Run database migrations
+npm run migration:run
 
 # 4. Start the development server
 npm run start:dev
 
-# 5. Visit Swagger API docs
-http://localhost:3000/api/docs
 ```
